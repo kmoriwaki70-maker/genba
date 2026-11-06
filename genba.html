@@ -336,41 +336,60 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <h1 id="cameraScreenTitle">視点場① 撮影</h1>
     <div></div>
   </div>
-  <!-- 上段：視点場図 -->
-  <div style="position:relative;height:40vh;background:#1B2A4A">
-    <div id="cameraMap" style="width:100%;height:100%"></div>
-    <div style="position:absolute;bottom:4px;right:4px;font-size:8px;color:rgba(255,255,255,0.6)">©国土地理院</div>
-  </div>
-  <!-- 下段：方位スライダーと撮影ボタン -->
-  <div style="padding:12px;display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--bg)">
-    <!-- 方位表示 -->
-    <div style="display:flex;align-items:center;gap:16px">
-      <div style="font-size:40px;transition:transform 0.2s" id="cameraBigArrow">↑</div>
-      <div style="text-align:center">
-        <div style="font-size:22px;font-weight:700;color:var(--navy)" id="cameraBigHeading">---</div>
-        <div style="font-size:11px;color:var(--text-sub)">撮影方向</div>
+  <!-- 縦向き：上段地図・下段コントロール / 横向き：左地図・右コントロール -->
+  <div id="cameraBody" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <!-- 地図エリア -->
+    <div id="cameraMapWrap" style="position:relative;flex:none;height:40vh;background:#1B2A4A">
+      <div id="cameraMap" style="width:100%;height:100%"></div>
+      <div style="position:absolute;bottom:4px;right:4px;font-size:8px;color:rgba(255,255,255,0.6)">©国土地理院</div>
+    </div>
+    <!-- コントロールエリア -->
+    <div id="cameraControls" style="padding:12px;display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--bg);flex:1;overflow-y:auto">
+      <!-- 方位表示 -->
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:40px;transition:transform 0.2s" id="cameraBigArrow">↑</div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:700;color:var(--navy)" id="cameraBigHeading">---</div>
+          <div style="font-size:11px;color:var(--text-sub)">撮影方向</div>
+        </div>
       </div>
+      <!-- 方位スライダー -->
+      <div style="width:100%;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--text-sub)">W</span>
+        <input type="range" id="cameraHeadingSlider" min="0" max="359" value="0"
+          oninput="onCameraSliderChange(this.value)"
+          style="flex:1;-webkit-appearance:none;height:8px;border-radius:4px;background:linear-gradient(to right,var(--navy),var(--orange),var(--navy));outline:none">
+        <span style="font-size:11px;color:var(--text-sub)">E</span>
+      </div>
+      <div style="display:flex;gap:8px;width:100%;justify-content:center">
+        <button onclick="adjustHeading(-5)"
+          style="background:var(--navy);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:16px;cursor:pointer">◀ 5°</button>
+        <button onclick="syncCompassToSlider()"
+          style="background:var(--orange);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">🧭 コンパス同期</button>
+        <button onclick="adjustHeading(5)"
+          style="background:var(--navy);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:16px;cursor:pointer">5° ▶</button>
+      </div>
+      <!-- 現在スロット表示 -->
+      <div id="cameraSlotLabel" style="font-size:13px;color:var(--text-sub);font-weight:600"></div>
+      <!-- 撮影ボタン -->
+      <button onclick="triggerCameraFromScreen()" style="width:72px;height:72px;border-radius:50%;background:var(--orange);border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:28px;cursor:pointer">📷</button>
+      <!-- 次へボタン -->
+      <button id="cameraNextBtn" onclick="moveToNextCameraSlot()"
+        style="width:100%;max-width:280px;padding:12px;border-radius:8px;background:var(--navy);color:white;border:none;font-size:15px;font-weight:700;cursor:pointer">
+        次へ → 視点場②
+      </button>
     </div>
-    <!-- 方位スライダー -->
-    <div style="width:100%;display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--text-sub)">W</span>
-      <input type="range" id="cameraHeadingSlider" min="0" max="359" value="0"
-        oninput="onCameraSliderChange(this.value)"
-        style="flex:1;-webkit-appearance:none;height:8px;border-radius:4px;background:linear-gradient(to right,var(--navy),var(--orange),var(--navy));outline:none">
-      <span style="font-size:11px;color:var(--text-sub)">E</span>
-    </div>
-    <div style="display:flex;gap:8px;width:100%;justify-content:center">
-      <button onclick="adjustHeading(-5)"
-        style="background:var(--navy);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:16px;cursor:pointer">◀ 5°</button>
-      <button onclick="syncCompassToSlider()"
-        style="background:var(--orange);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">🧭 コンパス同期</button>
-      <button onclick="adjustHeading(5)"
-        style="background:var(--navy);color:white;border:none;border-radius:6px;padding:8px 16px;font-size:16px;cursor:pointer">5° ▶</button>
-    </div>
-    <!-- 撮影ボタン -->
-    <button onclick="triggerCameraFromScreen()" style="width:72px;height:72px;border-radius:50%;background:var(--orange);border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:28px;cursor:pointer">📷</button>
   </div>
 </div>
+<style>
+@media (orientation: landscape) and (max-height: 500px) {
+  #cameraBody { flex-direction: row !important; }
+  #cameraMapWrap { width: 50% !important; height: 100% !important; flex: none !important; }
+  #cameraControls { flex: 1 !important; height: 100% !important; padding: 8px !important; gap: 6px !important; justify-content: center; }
+  #cameraControls #cameraBigArrow { font-size: 28px !important; }
+  #cameraControls #cameraBigHeading { font-size: 16px !important; }
+}
+</style>
 
 <!-- 視点場並び替え・挿入画面 -->
 <div class="screen" id="screen-reorder">
@@ -497,11 +516,35 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
       <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px;text-align:center">個別に書き出す</div>
-      <div class="export-card" onclick="exportJson()"><div class="export-icon">📦</div><h4>データをエクスポート（JSON）</h4><p>iPhone→PC転送用。全データをJSONで書き出します。</p></div>
+      <div class="export-card" onclick="exportJson()"><div class="export-icon">📦</div><h4>データをエクスポート（JSON・全体）</h4><p>全データをJSONで書き出します。</p></div>
+      <div class="export-card" onclick="exportJsonSplit()"><div class="export-icon">📦✂️</div><h4>データをエクスポート（JSON・分割）</h4><p>1ページ6枚ずつ分割して書き出します。iPhoneのメモリ不足対策。</p></div>
+      <div class="export-card" onclick="openMacSendModal()"><div class="export-icon">📡</div><h4>Macへ直接送信（Wi-Fi）</h4><p>同じWi-FiのMacへデータを送信します。事前にMacでサーバーを起動してください。</p></div>
       <div class="export-card" onclick="exportOriginalPhotos()"><div class="export-icon">🖼️</div><h4>オリジナル写真をPC保存</h4><p>全写真を元の画質のままPCに保存します。</p></div>
       <div class="export-card" onclick="openPrintPreview()"><div class="export-icon">📄</div><h4>PDF印刷プレビュー</h4><p>台帳のレイアウトを確認してから印刷・PDF保存できます。</p></div>
     </div>
     <button class="btn btn-ghost btn-full" onclick="closeModal('exportModal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Mac送信モーダル -->
+<div class="modal-overlay" id="macSendModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>📡 Macへ送信（Wi-Fi）</h3>
+    <p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">MacでサーバーPythonを起動後、MacのIPアドレスを入力してください。同じWi-Fiに接続している必要があります。</p>
+    <div class="form-group">
+      <label>MacのIPアドレス</label>
+      <input type="text" class="form-control" id="macIpInput" placeholder="例: 192.168.1.5" inputmode="decimal">
+      <div style="font-size:11px;color:var(--text-sub);margin-top:4px">MacでターミナルからPythonサーバーを起動すると表示されます</div>
+    </div>
+    <div id="macSendProgress" style="display:none;margin-bottom:16px;padding:12px;background:var(--cell-bg);border-radius:var(--radius)">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px" id="macSendLabel">送信中...</div>
+      <div style="background:var(--border);border-radius:4px;height:8px;overflow:hidden">
+        <div id="macSendBar" style="height:100%;background:var(--orange);width:0%;transition:width 0.3s;border-radius:4px"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="sendToMac()">送信開始</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="closeModal('macSendModal')">キャンセル</button>
   </div>
 </div>
 
@@ -988,17 +1031,59 @@ function deletePhoto(){
 document.getElementById('cameraInput').addEventListener('change',handleFileInput);
 document.getElementById('libraryInput').addEventListener('change',handleFileInput);
 
+function getExifOrientation(file,cb){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const view=new DataView(e.target.result);
+    if(view.getUint16(0,false)!==0xFFD8){cb(1);return;}
+    let offset=2;
+    while(offset<view.byteLength){
+      const marker=view.getUint16(offset,false);offset+=2;
+      if(marker===0xFFE1){
+        if(view.getUint32(offset+=2,false)!==0x45786966){cb(1);return;}
+        const little=view.getUint16(offset+=6,false)===0x4949;
+        offset+=view.getUint32(offset+4,little);
+        const tags=view.getUint16(offset,little);
+        offset+=2;
+        for(let i=0;i<tags;i++){
+          if(view.getUint16(offset+(i*12),little)===0x0112){cb(view.getUint16(offset+(i*12)+8,little));return;}
+        }
+      } else if((marker&0xFF00)!==0xFF00) break;
+      else offset+=view.getUint16(offset,false);
+    }
+    cb(1);
+  };
+  reader.readAsArrayBuffer(file.slice(0,65536));
+}
+function applyExifRotation(img,orientation,maxSize){
+  let w=img.width,h=img.height;
+  const swap=(orientation>=5&&orientation<=8);
+  if(swap)[w,h]=[h,w];
+  if(w>maxSize||h>maxSize){if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}else{w=Math.round(w*maxSize/h);h=maxSize;}}
+  const canvas=document.createElement('canvas');
+  canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.save();
+  if(orientation===2){ctx.translate(w,0);ctx.scale(-1,1);}
+  else if(orientation===3){ctx.translate(w,h);ctx.rotate(Math.PI);}
+  else if(orientation===4){ctx.translate(0,h);ctx.scale(1,-1);}
+  else if(orientation===5){ctx.rotate(Math.PI/2);ctx.scale(1,-1);}
+  else if(orientation===6){ctx.translate(w,0);ctx.rotate(Math.PI/2);}
+  else if(orientation===7){ctx.translate(w,h);ctx.rotate(Math.PI/2);ctx.scale(1,-1);}
+  else if(orientation===8){ctx.translate(0,h);ctx.rotate(-Math.PI/2);}
+  if(swap) ctx.drawImage(img,0,0,h,w);
+  else ctx.drawImage(img,0,0,w,h);
+  ctx.restore();
+  return canvas;
+}
 function handleFileInput(e){
   const file=e.target.files[0];if(!file)return;
-  const img=new Image();
   const objectUrl=URL.createObjectURL(file);
+  getExifOrientation(file,orientation=>{
+  const img=new Image();
   img.onload=()=>{
     const maxSize=1920;
-    let w=img.width,h=img.height;
-    if(w>maxSize||h>maxSize){if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}else{w=Math.round(w*maxSize/h);h=maxSize;}}
-    const canvas=document.createElement('canvas');
-    canvas.width=w;canvas.height=h;
-    canvas.getContext('2d').drawImage(img,0,0,w,h);
+    const canvas=applyExifRotation(img,orientation,maxSize);
     const compressed=canvas.toDataURL('image/jpeg',0.92);
     URL.revokeObjectURL(objectUrl);
     const page=projects[currentProjectId].pages[currentPageIndex];
@@ -1025,22 +1110,12 @@ function handleFileInput(e){
 
     const currentScreen=document.querySelector('.screen.active');
     if(currentScreen&&currentScreen.id==='screen-camera'){
-      const currentPage=projects[currentProjectId].pages[currentPageIndex];
-      const nextEmpty=currentPage.cells.findIndex((c,i)=>i>activeCellIndex&&!c.photo);
-      if(nextEmpty>=0){
-        activeCellIndex=nextEmpty;
-        const sn=currentPageIndex*6;
-        const num=sn+nextEmpty+1;
-        document.getElementById('cameraScreenTitle').textContent=`視点場${toKanji(num)} 撮影`;
-        showToast(`次は視点場${toKanji(num)}を撮影してください`);
-      }else{
-        showToast('このページの撮影が完了しました');
-        closeCameraScreen();
-      }
+      moveToNextCameraSlot();
     }
   };
   img.onerror=()=>{URL.revokeObjectURL(objectUrl);showToast('写真の読み込みに失敗しました');};
   img.src=objectUrl;
+  });
   e.target.value='';
 }
 
@@ -1257,6 +1332,12 @@ function openCameraScreen(cellIndex){
   const sn=currentPageIndex*6;
   const num=sn+cellIndex+1;
   document.getElementById('cameraScreenTitle').textContent=`視点場${toKanji(num)} 撮影`;
+  // スロットラベルと次へボタン初期化
+  const totalCells=project.pages.reduce((s,p)=>s+p.cells.filter(c=>c.photo).length,0);
+  const lbl=document.getElementById('cameraSlotLabel');
+  if(lbl) lbl.textContent=`視点場${toKanji(num)} / 撮影済${totalCells}枚`;
+  const btn=document.getElementById('cameraNextBtn');
+  if(btn) btn.textContent=`次へ → 視点場${toKanji(num+1)}`;
 
   currentCameraHeading=currentHeading||0;
   document.getElementById('cameraHeadingSlider').value=currentCameraHeading;
@@ -1297,6 +1378,52 @@ function triggerCameraFromScreen(){
 function closeCameraScreen(){
   if(cameraMap){cameraMap.remove();cameraMap=null;}
   showScreen('screen-ledger');
+}
+
+function moveToNextCameraSlot(){
+  const proj=projects[currentProjectId];
+  // 現在ページで次の空きを探す
+  const currentPage=proj.pages[currentPageIndex];
+  const nextInPage=currentPage.cells.findIndex((c,i)=>i>activeCellIndex&&!c.photo);
+  if(nextInPage>=0){
+    activeCellIndex=nextInPage;
+    const num=currentPageIndex*6+nextInPage+1;
+    document.getElementById('cameraScreenTitle').textContent=`視点場${toKanji(num)} 撮影`;
+    updateCameraNextBtn();
+    return;
+  }
+  // 次のページを探す
+  for(let pi=currentPageIndex+1;pi<proj.pages.length;pi++){
+    const ni=proj.pages[pi].cells.findIndex(c=>!c.photo);
+    if(ni>=0){
+      currentPageIndex=pi;activeCellIndex=ni;
+      renderPages();renderMiniMaps();
+      const num=pi*6+ni+1;
+      document.getElementById('cameraScreenTitle').textContent=`視点場${toKanji(num)} 撮影`;
+      showToast(`ページ${pi+1}へ移動しました`);
+      updateCameraNextBtn();
+      return;
+    }
+  }
+  // 全ページ埋まり→新ページ自動追加
+  proj.pages.push(createNewPage());
+  currentPageIndex=proj.pages.length-1;
+  activeCellIndex=0;
+  renderPages();renderMiniMaps();
+  const num=currentPageIndex*6+1;
+  document.getElementById('cameraScreenTitle').textContent=`視点場${toKanji(num)} 撮影`;
+  showToast(`台帳を自動追加しました（ページ${currentPageIndex+1}）`);
+  updateCameraNextBtn();
+}
+
+function updateCameraNextBtn(){
+  const proj=projects[currentProjectId];
+  const num=currentPageIndex*6+activeCellIndex+1;
+  const totalCells=proj.pages.reduce((s,p)=>s+p.cells.filter(c=>c.photo).length,0);
+  const btn=document.getElementById('cameraNextBtn');
+  if(btn) btn.textContent=`次へ → 視点場${toKanji(num+1)}`;
+  const lbl=document.getElementById('cameraSlotLabel');
+  if(lbl) lbl.textContent=`視点場${toKanji(num)} / 撮影済${totalCells}枚`;
 }
 
 function openAdjustModal(){
@@ -1766,6 +1893,121 @@ async function exportAll(){
       const id=currentProjectId;deleteProjectDB(id).then(()=>{delete projects[id];goBack();showToast('現場データをアプリから削除しました');});
     }
   },500);
+}
+
+function openMacSendModal(){
+  closeModal('exportModal');
+  const saved=localStorage.getItem('macIpAddress')||'';
+  document.getElementById('macIpInput').value=saved;
+  document.getElementById('macSendProgress').style.display='none';
+  document.getElementById('macSendModal').style.display='flex';
+}
+
+async function sendToMac(){
+  const ip=document.getElementById('macIpInput').value.trim();
+  if(!ip){showToast('IPアドレスを入力してください');return;}
+  localStorage.setItem('macIpAddress',ip);
+  const baseUrl=`http://${ip}:8765`;
+  const progress=document.getElementById('macSendProgress');
+  const label=document.getElementById('macSendLabel');
+  const bar=document.getElementById('macSendBar');
+  progress.style.display='block';
+  bar.style.width='0%';
+
+  const project=projects[currentProjectId];
+  const totalPages=project.pages.length;
+
+  // まず接続確認
+  label.textContent='🔗 Macへ接続中...';
+  try{
+    const ping=await fetch(`${baseUrl}/ping`,{method:'GET',mode:'cors',signal:AbortSignal.timeout(5000)});
+    if(!ping.ok)throw new Error('接続失敗');
+  }catch(e){
+    progress.style.display='none';
+    showToast('⚠️ Macに接続できません。サーバーが起動しているか確認してください。');
+    return;
+  }
+
+  // プロジェクト情報を最初に送信（写真なし）
+  label.textContent='📋 現場情報を送信中...';bar.style.width='5%';
+  const meta={...project,pages:project.pages.map(p=>({...p,cells:p.cells.map(c=>({...c,photo:null}))})),_totalPages:totalPages};
+  await fetch(`${baseUrl}/meta`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(meta),mode:'cors'});
+  bar.style.width='10%';
+  await new Promise(r=>setTimeout(r,300));
+
+  // ページごとに送信
+  for(let pi=0;pi<totalPages;pi++){
+    label.textContent=`📦 ページ${pi+1}/${totalPages}を送信中...`;
+    bar.style.width=`${10+Math.round((pi/totalPages)*88)}%`;
+    const pageData={pageIndex:pi,totalPages,cells:project.pages[pi].cells};
+    try{
+      await fetch(`${baseUrl}/page`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pageData),mode:'cors',signal:AbortSignal.timeout(60000)});
+    }catch(e){
+      showToast(`⚠️ ページ${pi+1}の送信に失敗。再試行してください。`);
+      progress.style.display='none';return;
+    }
+    await new Promise(r=>setTimeout(r,500));
+  }
+
+  // 完了通知
+  await fetch(`${baseUrl}/done`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({projectId:currentProjectId}),mode:'cors'});
+  bar.style.width='100%';
+  label.textContent='✅ 送信完了！Macで確認してください。';
+  await new Promise(r=>setTimeout(r,2000));
+  progress.style.display='none';
+  closeModal('macSendModal');
+  showToast('Macへの送信が完了しました');
+}
+
+function exportJson(){
+  const project=projects[currentProjectId];
+  const sn=(project.siteName||'現場台帳').replace(/[/\\:*?"<>|]/g,'_');
+  const date=project.date||'日付未設定';
+  const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${sn}_${date}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast(`JSONを書き出しました（全${project.pages.length}ページ）`);
+}
+
+async function exportJsonSplit(){
+  const project=projects[currentProjectId];
+  const sn=(project.siteName||'現場台帳').replace(/[/\\:*?"<>|]/g,'_');
+  const date=project.date||'日付未設定';
+  const totalPages=project.pages.length;
+  const progress=document.getElementById('exportProgress');
+  const label=document.getElementById('exportProgressLabel');
+  const bar=document.getElementById('exportProgressBar');
+  progress.style.display='block';
+
+  for(let pi=0;pi<totalPages;pi++){
+    label.textContent=`📦 ページ${pi+1}/${totalPages}を書き出し中...`;
+    bar.style.width=`${Math.round((pi/totalPages)*100)}%`;
+    await new Promise(r=>setTimeout(r,300));
+
+    // 1ページ分のデータを作成（写真データも含む）
+    const pageData={
+      ...project,
+      pages:[project.pages[pi]],
+      _splitInfo:{pageIndex:pi,totalPages,exportedAt:new Date().toISOString()}
+    };
+    const blob=new Blob([JSON.stringify(pageData,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`${sn}_${date}_P${String(pi+1).padStart(2,'0')}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    await new Promise(r=>setTimeout(r,800));
+  }
+
+  bar.style.width='100%';
+  label.textContent=`✅ 全${totalPages}ページを分割書き出し完了！`;
+  await new Promise(r=>setTimeout(r,1500));
+  progress.style.display='none';
+  showToast(`${totalPages}ファイルに分割して書き出しました`);
 }
 
 function exportCsvOnly(){
